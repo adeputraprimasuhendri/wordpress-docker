@@ -1,0 +1,44 @@
+version: '2'
+services:
+  web:
+    container_name: WEB_WP
+    build:
+      context: ./
+      dockerfile: web.dockerfile
+    volumes:
+      - ./wordpress/:/var/www
+      - ./dh-param/dhparam-2048.pem:/etc/ssl/certs/dhparam-2048.pem
+      - ./ssl/certificate.crt:/etc/ssl/certs/wordpress.com/certificate.crt
+      - ./ssl/private.key:/etc/ssl/certs/wordpress.com/private.key
+    ports:
+      - "80:80"
+      - "443:443"
+    links:
+      - app
+      - database
+
+  app:
+    container_name : APP_WP
+    build:
+      args:
+        user: wordpress
+        uid: 1000
+      context: ./
+      dockerfile: app.dockerfile
+    volumes:
+      - ./wordpress/:/var/www
+    links:
+      - database
+    environment:
+      DB_PORT: 3306
+      DB_HOST: database
+
+  database:
+    container_name: DB_WP
+    image: mysql:5.6
+    environment:
+        MYSQL_ROOT_PASSWORD: wordpress_password
+        MYSQL_DATABASE: wordpress
+    ports:
+        - "3306:3306"
+
